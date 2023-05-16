@@ -11,7 +11,7 @@
 # the Free Software Foundation; either version 3 of the License, or
 # (at your option) any later version.
 #
-# This program is distributed in the hope that it will be useful,
+# This program is distr194,4 209,2ibuted in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 # GNU General Public License for more details.
@@ -31,7 +31,7 @@ example_values = {"SCRIPT_SEQUENCE_ID": "MH1000",
                   "ATGATAACTGAAGAATTATGTGCCACACTTATTAATAAGAAAGAATATGTGAACCTTGCA"
                   "GATGTTTCCCTCTAGTAG",
                   "SCRIPT_EXCLUDED_REGION": "11,10 280,5",
-                  "SCRIPT_TARGET": "194,4 209,2",
+                  "SCRIPT_TARGET": "109,1 119,3",
                   "SCRIPT_INCLUDED_REGION": "5,286",
                   "SCRIPT_DETECTION_PICK_HYB_PROBE": True}
 

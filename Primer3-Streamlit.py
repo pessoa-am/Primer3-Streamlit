@@ -99,11 +99,11 @@ def sequence_block(seq, LEFT_POSITION=None, LEFT_LENGTH=None, INTERNAL_POSITION=
     ir_start = len(seq) + 1
     ir_end = 0
     if LEFT_POSITION is not None and LEFT_LENGTH is not None:
-        p_ranges.append(('LEFT', LEFT_POSITION - 1, LEFT_POSITION - 1 + LEFT_LENGTH - 1))
+        p_ranges.append(('LEFT', LEFT_POSITION, LEFT_POSITION + LEFT_LENGTH - 1))
     if INTERNAL_POSITION is not None and INTERNAL_LENGTH is not None:
-        io_range = ('INTERNAL', INTERNAL_POSITION - 1, INTERNAL_POSITION - 1 + INTERNAL_LENGTH - 1)
+        io_range = ('INTERNAL', INTERNAL_POSITION, INTERNAL_POSITION + INTERNAL_LENGTH - 1)
     if RIGHT_POSITION is not None and RIGHT_LENGTH is not None:
-        p_ranges.append(('RIGHT', RIGHT_POSITION - RIGHT_LENGTH, RIGHT_POSITION - 1))
+        p_ranges.append(('RIGHT', RIGHT_POSITION - RIGHT_LENGTH + 1, RIGHT_POSITION))
 
     if EXCLUDED_REGION is not None:
         for start, length in EXCLUDED_REGION:
@@ -139,7 +139,7 @@ def sequence_block(seq, LEFT_POSITION=None, LEFT_LENGTH=None, INTERNAL_POSITION=
             break
         range_gaps = remove_overlap(ranges)
         ranges += non_intersecting_parts(range_gaps, i_range)
-    print(ranges)
+
     for label, start, end in ranges:
         start_line = start // 50
         end_line = end // 50
@@ -831,7 +831,6 @@ if st.session_state.pick_primers and params["SEQUENCE_TEMPLATE"] != "":
                 with col:
                     st.write(highlight(f'Included region{n}:', '#83FCFC') + f'&nbsp;&nbsp;Start: {rg}; Length: {le}', unsafe_allow_html=True)
         if p == 0 and 'PAIR' in primer:
-            print(sequence_block_params)
             st.write(sequence_block(**sequence_block_params), unsafe_allow_html=True)
         elif p > 0 and not params["SCRIPT_SEQUENCE_BLOCK_FIRST"]:
             st.write(sequence_block(**sequence_block_params), unsafe_allow_html=True)
