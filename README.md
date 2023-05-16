@@ -1,3 +1,5 @@
+[![Open in Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://primer3.streamlit.app/)
+
 # Primer3-Streamlit
 
 **Primer3-Streamlit** is a web app interface for Primer3 that relies on [primer3-py](https://github.com/libnano/primer3-py) and [Streamlit](https://github.com/streamlit/streamlit), and is modeled after [Primer3Plus](https://github.com/primer3-org/primer3plus).
