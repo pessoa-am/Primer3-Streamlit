@@ -94,6 +94,7 @@ def sequence_block(seq, LEFT_POSITION=None, LEFT_LENGTH=None, INTERNAL_POSITION=
     p_ranges = []
     e_ranges = []
     t_ranges = []
+    range_gaps = []
     block_coords = []
     ir_start = len(seq) + 1
     ir_end = 0
@@ -120,13 +121,14 @@ def sequence_block(seq, LEFT_POSITION=None, LEFT_LENGTH=None, INTERNAL_POSITION=
     elif io_range is not None:
         p_ranges.append(io_range)
 
-    range_gaps = remove_overlap(e_ranges + t_ranges)
+    if EXCLUDED_REGION is not None or TARGET is not None:
+        range_gaps = remove_overlap(e_ranges + t_ranges)
 
     for p_range in p_ranges:
         if len(range_gaps) > 0:
             ranges += non_intersecting_parts(range_gaps, p_range)
         else:
-            ranges += p_range
+            ranges += [p_range]
 
     if INCLUDED_REGION is not None:
         i_range = ''
@@ -137,7 +139,7 @@ def sequence_block(seq, LEFT_POSITION=None, LEFT_LENGTH=None, INTERNAL_POSITION=
             break
         range_gaps = remove_overlap(ranges)
         ranges += non_intersecting_parts(range_gaps, i_range)
-
+    print(ranges)
     for label, start, end in ranges:
         start_line = start // 50
         end_line = end // 50
@@ -203,7 +205,7 @@ def sequence_block(seq, LEFT_POSITION=None, LEFT_LENGTH=None, INTERNAL_POSITION=
                 formatted_seq += f'{char}<br>\n'
             else:
                 formatted_seq += char
-    return f'<span style="font-family: &apos;monospace&apos;">{formatted_seq}</span>'
+    return f'<span style="font-family: monospace, \'Courier New\';">{formatted_seq}</span>'
 
 
 def ranges_to_list(input):
@@ -219,7 +221,7 @@ def ranges_to_list(input):
 
 
 def text_monospace(text):
-    html = f'<span style="font-family: &apos;monospace&apos;">{text}</span>'
+    html = f'<span style="font-family: monospace, \'Courier New\';">{text}</span>'
     return html
 
 
@@ -829,6 +831,7 @@ if st.session_state.pick_primers and params["SEQUENCE_TEMPLATE"] != "":
                 with col:
                     st.write(highlight(f'Included region{n}:', '#83FCFC') + f'&nbsp;&nbsp;Start: {rg}; Length: {le}', unsafe_allow_html=True)
         if p == 0 and 'PAIR' in primer:
+            print(sequence_block_params)
             st.write(sequence_block(**sequence_block_params), unsafe_allow_html=True)
         elif p > 0 and not params["SCRIPT_SEQUENCE_BLOCK_FIRST"]:
             st.write(sequence_block(**sequence_block_params), unsafe_allow_html=True)
