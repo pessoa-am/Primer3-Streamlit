@@ -1,2 +1,2 @@
 streamlit>=1.14.0
-primer3-py>=1.0.0
+primer3-py>=1.2.2

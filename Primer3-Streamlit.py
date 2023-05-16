@@ -34,8 +34,6 @@ def hierarchize(primer3_results):
             if len(tmp) == 2:
                 results[tmp[1]] = v
                 continue
-            if tmp[1] == 'RIGHTINTERNAL':
-                tmp[1] = 'INTERNAL'
             if tmp[2] == 'EXPLAIN':
                 results['EXPLAIN'][tmp[0] + '_' + tmp[1]] = v
             elif tmp[2].isdigit():
@@ -49,19 +47,10 @@ def hierarchize(primer3_results):
                 else:
                     results['PRIMERS'][p][tmp[1]]['POSITION'] = v[0]
                     results['PRIMERS'][p][tmp[1]]['LENGTH'] = v[1]
-            elif '{' in tmp[2]:
-                results['PRIMERS'][p][tmp[1]][tmp[3]] = v
             elif tmp[2] == 'NUM':
                 pass
         else:
             results[k] = v
-    for p in results['PRIMERS']:
-        if 'LEFT' in p:
-            if len(p['LEFT'].keys()) <= 1:
-                del p['LEFT']
-        if 'RIGHT' in p:
-            if len(p['RIGHT'].keys()) <= 1:
-                del p['RIGHT']
     return results
 
 
@@ -645,7 +634,7 @@ with primer3_main.container():
             params["SCRIPT_SEQUENCE_BLOCK_PAIRS"] = st.checkbox("Only on pair design", value=True)
             params["SCRIPT_SEQUENCE_BLOCK_FIRST"] = st.checkbox("Only on first entry", value=True)
         with col_2:
-            params["SCRIPT_SHOW_INPUT"] = st.checkbox("Show original input in JSON format", value=True)
+            params["SCRIPT_SHOW_INPUT"] = st.checkbox("Show original input in JSON format", value=False)
         with col_3:
             results_format = st.radio('Show output in JSON format:', options=('No', 'Flat', 'Hierarchized'), help='"Flat" is the standard Primer3 output. "Hierarchized" means outputing Primer3 results in an hierachical dictionary, which is easier to read and use in downstream applications.')
             if results_format != 'No':
@@ -792,6 +781,8 @@ if st.session_state.pick_primers and params["SEQUENCE_TEMPLATE"] != "":
                             st.write(f"{primer_desc[key]}: {primer[pt][key]:.1f}")
                         else:
                             st.write(f"{primer_desc[key]}: {primer[pt][key]}")
+                if 'LIBRARY_MISPRIMING' in primer[pt]:
+                    st.write(f"Mispriming: {primer[pt]['LIBRARY_MISPRIMING'][0]:.2f}, {primer[pt]['LIBRARY_MISPRIMING'][1]}")
         if 'PAIR' in primer:
             col_1, col_2, col_3 = st.columns(3)
             with col_1:
@@ -800,6 +791,8 @@ if st.session_state.pick_primers and params["SEQUENCE_TEMPLATE"] != "":
                 st.write(f"Pair Any: {primer['PAIR']['COMPL_ANY']}")
             with col_3:
                 st.write(f"Pair End: {primer['PAIR']['COMPL_END']}")
+            if 'LIBRARY_MISPRIMING' in primer['PAIR']:
+                st.write(f"Pair Mispriming: {primer['PAIR']['LIBRARY_MISPRIMING'][0]:.2f}, {primer['PAIR']['LIBRARY_MISPRIMING'][1]}")
         if 'SEQUENCE_EXCLUDED_REGION' in seq_args:
             reg_num = len(seq_args['SEQUENCE_EXCLUDED_REGION'])
             for i, col in enumerate(st.columns(reg_num)):
