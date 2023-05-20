@@ -239,8 +239,32 @@ st.markdown("""
 
 params = {}
 st_values = reset_values()
+
 table_th_default = 0
 table_salt_default = 0
+
+state_defaults = {
+    "load_example": False,
+    "pick_primers": False,
+    "reset_form": False,
+    "task": "Detection",
+    "back_active": False,
+    "back_params": {},
+    "misprime_lib_index": 0,
+    "table_th_index": table_th_default,
+    "table_salt_index": table_salt_default,
+}
+
+for key, default_value in state_defaults.items():
+    if key not in st.session_state:
+        st.session_state[key] = default_value
+
+def sync_task_state():
+    st.session_state.task_help = task_help[st.session_state.task]
+    st.session_state.task_index = st_args["SCRIPT_TASK"]["options"].index(st.session_state.task)
+
+if "task_help" not in st.session_state:
+    sync_task_state()
 seq_args = {}
 global_args = {}
 
@@ -263,56 +287,46 @@ primer_type = {'LEFT': 'Left Primer',
                'INTERNAL': 'Internal Oligo',
                'RIGHT': 'Right Primer'
                }
-if "load_example" not in st.session_state:
-    st.session_state.load_example = False
-if "pick_primers" not in st.session_state:
-    st.session_state.pick_primers = False
-if "reset_form" not in st.session_state:
-    st.session_state.reset_form = False
-if "task" not in st.session_state:
-    st.session_state.task = "Detection"
-if "task_index" not in st.session_state:
-    st.session_state.task_index = 0
-if "task_help" not in st.session_state:
-    st.session_state.task_help = task_help[st.session_state.task]
-if "back" not in st.session_state:
-    st.session_state.back = False
-if "misprime_lib_index" not in st.session_state:
-    st.session_state.misprime_lib_index = 0
-if "table_th_index" not in st.session_state:
-    st.session_state.table_th_index = table_th_default
-if "table_salt_index" not in st.session_state:
-    st.session_state.table_salt_index = table_th_default
 primer3_main = st.empty()
+
+
+def handle_reset_form():
+    st.session_state.reset_form = True
 
 
 def change_task():
     st.session_state.task = st.session_state["SCRIPT_TASK"]
-    st.session_state.task_help = task_help[st.session_state["SCRIPT_TASK"]]
-    st.session_state.task_index = st_args["SCRIPT_TASK"]["options"].index(
-        st.session_state["SCRIPT_TASK"])
-    return
+    sync_task_state()
 
 
 def back_to_input():
     st.session_state.pick_primers = False
-    st.session_state.back = params
-    return
+    st.session_state.back_params = dict(params)
+    st.session_state.back_active = True
 
 
 def reset_session_keys():
-    for key in st.session_state:
-        try:
+    for key in st_default_values:
+        if "value" in st_default_values[key]:
             st.session_state[key] = st_default_values[key]["value"]
-        except KeyError:
-            continue
+    
+    for key, default_value in state_defaults.items():
+        st.session_state[key] = default_value
+    
     st.session_state["SCRIPT_PRIMER_TM_FORMULA"] = st_args["SCRIPT_PRIMER_TM_FORMULA"]["options"][table_th_default]
     st.session_state["SCRIPT_PRIMER_SALT_CORRECTIONS"] = st_args["SCRIPT_PRIMER_SALT_CORRECTIONS"]["options"][table_salt_default]
     st.session_state["PRIMER_MISPRIMING_LIBRARY"] = st_args["PRIMER_MISPRIMING_LIBRARY"]["options"][0]
-    return
+    
+    sync_task_state()
 
 
 with primer3_main.container():
+    if st.session_state.reset_form:
+        params = {}
+        st_values = reset_values(st_values)
+        reset_session_keys()
+        st.session_state.reset_form = False
+    
     st.title('Primer3')
     col_1, col_2, col_3, col_4 = st.columns([3, 3, 1, 1])
     with col_1:
@@ -344,21 +358,12 @@ with primer3_main.container():
     with tab_main:
         primer3_input = st.empty()
         with primer3_input.container():
-            if st.session_state.reset_form:
-                params = {}
-                task = 'Detection'
-                st_values = reset_values(st_values)
-                reset_session_keys()
-                st.session_state.table_th_index = 0
-                st.session_state.table_salt_index = 0
-                st.session_state.misprime_lib_index = 0
-                st.session_state.load_example = False
-                st.session_state.reset_form = False
-            if st.session_state.back:
+            if st.session_state.back_active:
                 for key in st_values:
-                    if key in st.session_state.back and 'value' in st_values[key]:
-                        st_values[key]["value"] = st.session_state.back[key]
-                        params[key] = st.session_state.back[key]
+                    if key in st.session_state.back_params and 'value' in st_values[key]:
+                        st_values[key]["value"] = st.session_state.back_params[key]
+                        params[key] = st.session_state.back_params[key]
+                st.session_state.back_active = False
             col_1, col_2 = st.columns([1, 2])
             with col_1:
                 if st.session_state.task not in ["Primer_Check"]:
@@ -369,6 +374,8 @@ with primer3_main.container():
                 if st.session_state.load_example:
                     for key in example_values:
                         st_values[key]["value"] = example_values[key]
+                        widget_key = st_args.get(key, {}).get("key", key)
+                        st.session_state[widget_key] = example_values[key]
                 params["SCRIPT_SEQUENCE_ID"] = st.text_input(
                     **st_args["SCRIPT_SEQUENCE_ID"], **st_values["SCRIPT_SEQUENCE_ID"])
                 if st.session_state.task in ["Primer_Check"]:
