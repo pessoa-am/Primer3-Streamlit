@@ -473,13 +473,13 @@ with primer3_main.container():
             st.write('[Primer Size](/Help#PRIMER_SIZE)')
         with col_2:
             params["PRIMER_MIN_SIZE"] = st.number_input(
-                "Min:", min_value=1, max_value=36, value=18, step=1, key="PRIMER_MIN_SIZE")
+                **st_args["PRIMER_MIN_SIZE"], **st_values["PRIMER_MIN_SIZE"])
         with col_3:
             params["PRIMER_OPT_SIZE"] = st.number_input(
-                "Opt:", min_value=1, max_value=36, value=20, step=1, key="PRIMER_OPT_SIZE")
+                **st_args["PRIMER_OPT_SIZE"], **st_values["PRIMER_OPT_SIZE"])
         with col_4:
             params["PRIMER_MAX_SIZE"] = st.number_input(
-                "Max:", min_value=1, max_value=36, value=27, step=1, key="PRIMER_MAX_SIZE")
+                **st_args["PRIMER_MAX_SIZE"], **st_values["PRIMER_MAX_SIZE"])
         with col_5:
             st.caption('')
         col_1, col_2, col_3, col_4, col_5 = st.columns([4, 7, 7, 7, 15])
@@ -488,13 +488,13 @@ with primer3_main.container():
             st.write('[Primer TM](/Help#PRIMER_TM)')
         with col_2:
             params["PRIMER_MIN_TM"] = st.number_input(
-                "Min:", min_value=0.0, max_value=100.0, value=57.0, step=0.1, key="PRIMER_MIN_TM")
+                **st_args["PRIMER_MIN_TM"], **st_values["PRIMER_MIN_TM"])
         with col_3:
             params["PRIMER_OPT_TM"] = st.number_input(
-                "Opt:", min_value=0.0, max_value=100.0, value=60.0, step=0.1, key="PRIMER_OPT_TM")
+                **st_args["PRIMER_OPT_TM"], **st_values["PRIMER_OPT_TM"])
         with col_4:
             params["PRIMER_MAX_TM"] = st.number_input(
-                "Max:", min_value=0.0, max_value=100.0, value=63.0, step=0.1, key="PRIMER_MAX_TM")
+                **st_args["PRIMER_MAX_TM"], **st_values["PRIMER_MAX_TM"])
         with col_5:
             st.caption('')
         # params["PRIMER_MAX_DIFF_TM"] = st.number_input(**st_args["PRIMER_MAX_DIFF_TM"], **st_values["PRIMER_MAX_DIFF_TM"])
@@ -505,13 +505,13 @@ with primer3_main.container():
             st.write('[Primer %GC](/Help#PRIMER_GC_PERCENT)')
         with col_2:
             params["PRIMER_MIN_GC"] = st.number_input(
-                "Min:", min_value=0.0, max_value=100.0, value=20.0, step=0.1, key="PRIMER_MIN_GC")
+                **st_args["PRIMER_MIN_GC"], **st_values["PRIMER_MIN_GC"])
         with col_3:
-            params["PRIMER_OPT_GC"] = st.number_input(
-                "Opt:", min_value=0.0, max_value=100.0, value=50.0, step=0.1, key="PRIMER_OPT_GC")
+            params["PRIMER_OPT_GC_PERCENT"] = st.number_input(
+                **st_args["PRIMER_OPT_GC_PERCENT"], **st_values["PRIMER_OPT_GC_PERCENT"])
         with col_4:
             params["PRIMER_MAX_GC"] = st.number_input(
-                "Max:", min_value=0.0, max_value=100.0, value=80.0, step=0.1, key="PRIMER_MAX_GC")
+                **st_args["PRIMER_MAX_GC"], **st_values["PRIMER_MAX_GC"])
         with col_5:
             # params["PRIMER_GC_PERCENT"] = st.number_input(**st_args["PRIMER_GC_PERCENT"], **st_values["PRIMER_GC_PERCENT"])
             col_1, col_2, col_3 = st.columns([5, 6, 10])
@@ -605,8 +605,30 @@ with primer3_main.container():
                 **st_args["SCRIPT_PRIMER_NAME_ACRONYM_INTERNAL"], **st_values["SCRIPT_PRIMER_NAME_ACRONYM_INTERNAL"])
             params["SCRIPT_PRIMER_NAME_ACRONYM_SPACER"] = st.text_input(
                 **st_args["SCRIPT_PRIMER_NAME_ACRONYM_SPACER"], **st_values["SCRIPT_PRIMER_NAME_ACRONYM_SPACER"])
-        # params["PRIMER_PRODUCT_TM"] = st.number_input(**st_args["PRIMER_PRODUCT_TM"], **st_values["PRIMER_PRODUCT_TM"])
-        # params["PRIMER_PRODUCT_SIZE"] = st.number_input(**st_args["PRIMER_PRODUCT_SIZE"], **st_values["PRIMER_PRODUCT_SIZE"])
+        col_1, col_2, col_3, col_4 = st.columns([4, 7, 7, 7])
+        with col_1:
+            st.write("")
+            st.markdown("Product Tm:")
+        with col_2:
+            params["PRIMER_PRODUCT_MIN_TM"] = st.number_input(
+                **st_args["PRIMER_PRODUCT_MIN_TM"], **st_values["PRIMER_PRODUCT_MIN_TM"])
+        with col_3:
+            params["PRIMER_PRODUCT_OPT_TM"] = st.number_input(
+                **st_args["PRIMER_PRODUCT_OPT_TM"], **st_values["PRIMER_PRODUCT_OPT_TM"])
+        with col_4:
+            params["PRIMER_PRODUCT_MAX_TM"] = st.number_input(
+                **st_args["PRIMER_PRODUCT_MAX_TM"], **st_values["PRIMER_PRODUCT_MAX_TM"])
+        col_1, col_2, col_3, col_4 = st.columns([4, 7, 7, 7])
+        with col_1:
+            st.write("")
+            st.markdown("Product Size:")
+        with col_2:
+            st.write("")
+        with col_3:
+            params["PRIMER_PRODUCT_SIZE_OPT"] = st.number_input(
+                **st_args["PRIMER_PRODUCT_SIZE_OPT"], **st_values["PRIMER_PRODUCT_SIZE_OPT"])
+        with col_4:
+            st.write("")
         col_1, col_2, col_3 = st.columns([3, 7, 5])
         with col_1:
             params["SCRIPT_PRIMER_LIBERAL_BASE"] = st.checkbox(
@@ -644,17 +666,196 @@ with primer3_main.container():
             params["SCRIPT_SHOW_INPUT"] = st.checkbox("Show original input in JSON format", value=False)
         with col_3:
             results_format = st.radio('Show output in JSON format:', options=('No', 'Flat', 'Hierarchized'), help='"Flat" is the standard Primer3 output. "Hierarchized" means outputing Primer3 results in an hierachical dictionary, which is easier to read and use in downstream applications.')
-            if results_format != 'No':
-                params[f'SCRIPT_SHOW_OUTPUT_{results_format.upper()}'] = True
+            if results_format == 'Flat':
+                params['SCRIPT_SHOW_OUTPUT_FLAT'] = True
+                params['SCRIPT_SHOW_OUTPUT_HIERARCHIZED'] = False
+            elif results_format == 'Hierarchized':
+                params['SCRIPT_SHOW_OUTPUT_FLAT'] = False
+                params['SCRIPT_SHOW_OUTPUT_HIERARCHIZED'] = True
             else:
                 params['SCRIPT_SHOW_OUTPUT_FLAT'] = False
                 params['SCRIPT_SHOW_OUTPUT_HIERARCHIZED'] = False
     with tab_io:
-        st.caption('Not implemented yet')
+        params["PRIMER_INTERNAL_OLIGO_EXCLUDED_REGION"] = st.text_input(
+            **st_args["PRIMER_INTERNAL_OLIGO_EXCLUDED_REGION"], **st_values["PRIMER_INTERNAL_OLIGO_EXCLUDED_REGION"])
+        col_1, col_2, col_3, col_4, col_5 = st.columns([4, 7, 7, 7, 15])
+        with col_1:
+            st.caption('')
+            st.write('[Hyb Oligo Size](/Help#PRIMER_SIZE)')
+        with col_2:
+            params["PRIMER_INTERNAL_OLIGO_MIN_SIZE"] = st.number_input(
+                **st_args["PRIMER_INTERNAL_OLIGO_MIN_SIZE"], **st_values["PRIMER_INTERNAL_OLIGO_MIN_SIZE"])
+        with col_3:
+            params["PRIMER_INTERNAL_OLIGO_OPT_SIZE"] = st.number_input(
+                **st_args["PRIMER_INTERNAL_OLIGO_OPT_SIZE"], **st_values["PRIMER_INTERNAL_OLIGO_OPT_SIZE"])
+        with col_4:
+            params["PRIMER_INTERNAL_OLIGO_MAX_SIZE"] = st.number_input(
+                **st_args["PRIMER_INTERNAL_OLIGO_MAX_SIZE"], **st_values["PRIMER_INTERNAL_OLIGO_MAX_SIZE"])
+        with col_5:
+            st.caption('')
+        col_1, col_2, col_3, col_4, col_5 = st.columns([4, 7, 7, 7, 15])
+        with col_1:
+            st.caption('')
+            st.write('[Hyb Oligo Tm](/Help#PRIMER_TM)')
+        with col_2:
+            params["PRIMER_INTERNAL_OLIGO_MIN_TM"] = st.number_input(
+                **st_args["PRIMER_INTERNAL_OLIGO_MIN_TM"], **st_values["PRIMER_INTERNAL_OLIGO_MIN_TM"])
+        with col_3:
+            params["PRIMER_INTERNAL_OLIGO_OPT_TM"] = st.number_input(
+                **st_args["PRIMER_INTERNAL_OLIGO_OPT_TM"], **st_values["PRIMER_INTERNAL_OLIGO_OPT_TM"])
+        with col_4:
+            params["PRIMER_INTERNAL_OLIGO_MAX_TM"] = st.number_input(
+                **st_args["PRIMER_INTERNAL_OLIGO_MAX_TM"], **st_values["PRIMER_INTERNAL_OLIGO_MAX_TM"])
+        with col_5:
+            st.caption('')
+        col_1, col_2, col_3, col_4, col_5 = st.columns([4, 7, 7, 7, 15])
+        with col_1:
+            st.caption('')
+            st.write('[Hyb Oligo %GC](/Help#PRIMER_GC_PERCENT)')
+        with col_2:
+            params["PRIMER_INTERNAL_OLIGO_MIN_GC"] = st.number_input(
+                **st_args["PRIMER_INTERNAL_OLIGO_MIN_GC"], **st_values["PRIMER_INTERNAL_OLIGO_MIN_GC"])
+        with col_3:
+            params["PRIMER_INTERNAL_OLIGO_OPT_GC_PERCENT"] = st.number_input(
+                **st_args["PRIMER_INTERNAL_OLIGO_OPT_GC_PERCENT"], **st_values["PRIMER_INTERNAL_OLIGO_OPT_GC_PERCENT"])
+        with col_4:
+            params["PRIMER_INTERNAL_OLIGO_MAX_GC"] = st.number_input(
+                **st_args["PRIMER_INTERNAL_OLIGO_MAX_GC"], **st_values["PRIMER_INTERNAL_OLIGO_MAX_GC"])
+        with col_5:
+            st.caption('')
+        col_1, col_2 = st.columns(2)
+        with col_1:
+            params["PRIMER_INTERNAL_SALT_MONOVALENT"] = st.number_input(
+                **st_args["PRIMER_INTERNAL_SALT_MONOVALENT"], **st_values["PRIMER_INTERNAL_SALT_MONOVALENT"])
+            params["PRIMER_INTERNAL_SALT_DIVALENT"] = st.number_input(
+                **st_args["PRIMER_INTERNAL_SALT_DIVALENT"], **st_values["PRIMER_INTERNAL_SALT_DIVALENT"])
+            params["PRIMER_INTERNAL_OLIGO_NUM_NS"] = st.number_input(
+                **st_args["PRIMER_INTERNAL_MAX_NS_ACCEPTED"], **st_values["PRIMER_INTERNAL_MAX_NS_ACCEPTED"])
+            params["PRIMER_INTERNAL_OLIGO_SELF_ANY"] = st.number_input(
+                **st_args["PRIMER_INTERNAL_MAX_SELF_ANY"], **st_values["PRIMER_INTERNAL_MAX_SELF_ANY"])
+        with col_2:
+            params["PRIMER_INTERNAL_OLIGO_DNA_CONC"] = st.number_input(
+                **st_args["PRIMER_INTERNAL_OLIGO_DNA_CONC"], **st_values["PRIMER_INTERNAL_OLIGO_DNA_CONC"])
+            params["PRIMER_INTERNAL_OLIGO_DNTP_CONC"] = st.number_input(
+                **st_args["PRIMER_INTERNAL_OLIGO_DNTP_CONC"], **st_values["PRIMER_INTERNAL_OLIGO_DNTP_CONC"])
+            params["PRIMER_INTERNAL_OLIGO_MAX_POLY_X"] = st.number_input(
+                **st_args["PRIMER_INTERNAL_OLIGO_MAX_POLY_X"], **st_values["PRIMER_INTERNAL_OLIGO_MAX_POLY_X"])
+            params["PRIMER_INTERNAL_OLIGO_SELF_END"] = st.number_input(
+                **st_args["PRIMER_INTERNAL_OLIGO_SELF_END"], **st_values["PRIMER_INTERNAL_OLIGO_SELF_END"])
+        col_1, col_2 = st.columns(2)
+        with col_1:
+            params["PRIMER_INTERNAL_OLIGO_MAX_MISHYB"] = st.number_input(
+                **st_args["PRIMER_INTERNAL_OLIGO_MAX_MISHYB"], **st_values["PRIMER_INTERNAL_OLIGO_MAX_MISHYB"])
+        with col_2:
+            params["PRIMER_INTERNAL_OLIGO_MIN_QUALITY"] = st.number_input(
+                **st_args["PRIMER_INTERNAL_OLIGO_MIN_QUALITY"], **st_values["PRIMER_INTERNAL_OLIGO_MIN_QUALITY"])
+        col_1, col_2 = st.columns(2)
+        with col_1:
+            params["PRIMER_INTERNAL_OLIGO_MISHYB_LIBRARY"] = st.selectbox(
+                **st_args["PRIMER_INTERNAL_OLIGO_MISHYB_LIBRARY"], **st_values["PRIMER_INTERNAL_OLIGO_MISHYB_LIBRARY"])
     with tab_pw:
-        st.caption('Not implemented yet')
+        col_p, col_pp, col_io = st.columns(3)
+        with col_p:
+            st.subheader("For Primers")
+            params["PRIMER_WT_TM_LT"] = st.number_input(
+                **st_args["PRIMER_WT_TM_LT"], **st_values["PRIMER_WT_TM_LT"])
+            params["PRIMER_WT_TM_GT"] = st.number_input(
+                **st_args["PRIMER_WT_TM_GT"], **st_values["PRIMER_WT_TM_GT"])
+            params["PRIMER_WT_SIZE_LT"] = st.number_input(
+                **st_args["PRIMER_WT_SIZE_LT"], **st_values["PRIMER_WT_SIZE_LT"])
+            params["PRIMER_WT_SIZE_GT"] = st.number_input(
+                **st_args["PRIMER_WT_SIZE_GT"], **st_values["PRIMER_WT_SIZE_GT"])
+            params["PRIMER_WT_GC_PERCENT_LT"] = st.number_input(
+                **st_args["PRIMER_WT_GC_PERCENT_LT"], **st_values["PRIMER_WT_GC_PERCENT_LT"])
+            params["PRIMER_WT_GC_PERCENT_GT"] = st.number_input(
+                **st_args["PRIMER_WT_GC_PERCENT_GT"], **st_values["PRIMER_WT_GC_PERCENT_GT"])
+            params["PRIMER_WT_REP_SIM"] = st.number_input(
+                **st_args["PRIMER_WT_REP_SIM"], **st_values["PRIMER_WT_REP_SIM"])
+            params["PRIMER_WT_COMPL_ANY"] = st.number_input(
+                **st_args["PRIMER_WT_COMPL_ANY"], **st_values["PRIMER_WT_COMPL_ANY"])
+            params["PRIMER_WT_COMPL_END"] = st.number_input(
+                **st_args["PRIMER_WT_COMPL_END"], **st_values["PRIMER_WT_COMPL_END"])
+            params["PRIMER_WT_TEMPLATE_MISPRIMING"] = st.number_input(
+                **st_args["PRIMER_WT_TEMPLATE_MISPRIMING"], **st_values["PRIMER_WT_TEMPLATE_MISPRIMING"])
+            params["PRIMER_WT_NUM_NS"] = st.number_input(
+                **st_args["PRIMER_WT_NUM_NS"], **st_values["PRIMER_WT_NUM_NS"])
+            params["PRIMER_WT_SEQ_QUAL"] = st.number_input(
+                **st_args["PRIMER_WT_SEQ_QUAL"], **st_values["PRIMER_WT_SEQ_QUAL"])
+            params["PRIMER_WT_END_QUAL"] = st.number_input(
+                **st_args["PRIMER_WT_END_QUAL"], **st_values["PRIMER_WT_END_QUAL"])
+            params["PRIMER_WT_POS_PENALTY"] = st.number_input(
+                **st_args["PRIMER_WT_POS_PENALTY"], **st_values["PRIMER_WT_POS_PENALTY"])
+            params["PRIMER_WT_END_STABILITY"] = st.number_input(
+                **st_args["PRIMER_WT_END_STABILITY"], **st_values["PRIMER_WT_END_STABILITY"])
+            params["PRIMER_INSIDE_PENALTY"] = st.number_input(
+                **st_args["PRIMER_INSIDE_PENALTY"], **st_values["PRIMER_INSIDE_PENALTY"])
+            params["PRIMER_OUTSIDE_PENALTY"] = st.number_input(
+                **st_args["PRIMER_OUTSIDE_PENALTY"], **st_values["PRIMER_OUTSIDE_PENALTY"])
+        
+        with col_pp:
+            st.subheader("For Primer Pairs")
+            params["PRIMER_PAIR_WT_PRODUCT_TM_LT"] = st.number_input(
+                **st_args["PRIMER_PAIR_WT_PRODUCT_TM_LT"], **st_values["PRIMER_PAIR_WT_PRODUCT_TM_LT"])
+            params["PRIMER_PAIR_WT_PRODUCT_TM_GT"] = st.number_input(
+                **st_args["PRIMER_PAIR_WT_PRODUCT_TM_GT"], **st_values["PRIMER_PAIR_WT_PRODUCT_TM_GT"])
+            params["PRIMER_PAIR_WT_PRODUCT_SIZE_LT"] = st.number_input(
+                **st_args["PRIMER_PAIR_WT_PRODUCT_SIZE_LT"], **st_values["PRIMER_PAIR_WT_PRODUCT_SIZE_LT"])
+            params["PRIMER_PAIR_WT_PRODUCT_SIZE_GT"] = st.number_input(
+                **st_args["PRIMER_PAIR_WT_PRODUCT_SIZE_GT"], **st_values["PRIMER_PAIR_WT_PRODUCT_SIZE_GT"])
+            params["PRIMER_PAIR_WT_COMPL_ANY"] = st.number_input(
+                **st_args["PRIMER_PAIR_WT_COMPL_ANY"], **st_values["PRIMER_PAIR_WT_COMPL_ANY"])
+            params["PRIMER_PAIR_WT_COMPL_END"] = st.number_input(
+                **st_args["PRIMER_PAIR_WT_COMPL_END"], **st_values["PRIMER_PAIR_WT_COMPL_END"])
+            params["PRIMER_PAIR_WT_TEMPLATE_MISPRIMING"] = st.number_input(
+                **st_args["PRIMER_PAIR_WT_TEMPLATE_MISPRIMING"], **st_values["PRIMER_PAIR_WT_TEMPLATE_MISPRIMING"])
+            params["PRIMER_PAIR_WT_DIFF_TM"] = st.number_input(
+                **st_args["PRIMER_PAIR_WT_DIFF_TM"], **st_values["PRIMER_PAIR_WT_DIFF_TM"])
+            params["PRIMER_PAIR_WT_PR_PENALTY"] = st.number_input(
+                **st_args["PRIMER_PAIR_WT_PR_PENALTY"], **st_values["PRIMER_PAIR_WT_PR_PENALTY"])
+            params["PRIMER_PAIR_WT_IO_PENALTY"] = st.number_input(
+                **st_args["PRIMER_PAIR_WT_IO_PENALTY"], **st_values["PRIMER_PAIR_WT_IO_PENALTY"])
+        
+        with col_io:
+            st.subheader("For Hyb Oligos")
+            params["PRIMER_IO_WT_TM_LT"] = st.number_input(
+                **st_args["PRIMER_IO_WT_TM_LT"], **st_values["PRIMER_IO_WT_TM_LT"])
+            params["PRIMER_IO_WT_TM_GT"] = st.number_input(
+                **st_args["PRIMER_IO_WT_TM_GT"], **st_values["PRIMER_IO_WT_TM_GT"])
+            params["PRIMER_IO_WT_SIZE_LT"] = st.number_input(
+                **st_args["PRIMER_IO_WT_SIZE_LT"], **st_values["PRIMER_IO_WT_SIZE_LT"])
+            params["PRIMER_IO_WT_SIZE_GT"] = st.number_input(
+                **st_args["PRIMER_IO_WT_SIZE_GT"], **st_values["PRIMER_IO_WT_SIZE_GT"])
+            params["PRIMER_IO_WT_GC_PERCENT_LT"] = st.number_input(
+                **st_args["PRIMER_IO_WT_GC_PERCENT_LT"], **st_values["PRIMER_IO_WT_GC_PERCENT_LT"])
+            params["PRIMER_IO_WT_GC_PERCENT_GT"] = st.number_input(
+                **st_args["PRIMER_IO_WT_GC_PERCENT_GT"], **st_values["PRIMER_IO_WT_GC_PERCENT_GT"])
+            params["PRIMER_IO_WT_REP_SIM"] = st.number_input(
+                **st_args["PRIMER_IO_WT_REP_SIM"], **st_values["PRIMER_IO_WT_REP_SIM"])
+            params["PRIMER_IO_WT_COMPL_ANY"] = st.number_input(
+                **st_args["PRIMER_IO_WT_COMPL_ANY"], **st_values["PRIMER_IO_WT_COMPL_ANY"])
+            params["PRIMER_IO_WT_SEQ_QUAL"] = st.number_input(
+                **st_args["PRIMER_IO_WT_SEQ_QUAL"], **st_values["PRIMER_IO_WT_SEQ_QUAL"])
+            params["PRIMER_IO_WT_NUM_NS"] = st.number_input(
+                **st_args["PRIMER_IO_WT_NUM_NS"], **st_values["PRIMER_IO_WT_NUM_NS"])
     with tab_sq:
-        st.caption('Not implemented yet')
+        col_1, col_2 = st.columns([1, 2.5])
+        with col_1:
+            params["PRIMER_FIRST_BASE_INDEX"] = st.number_input(
+                **st_args["PRIMER_FIRST_BASE_INDEX"], **st_values["PRIMER_FIRST_BASE_INDEX"])
+            params["PRIMER_START_CODON_POSITION"] = st.text_input(
+                **st_args["PRIMER_START_CODON_POSITION"], **st_values["PRIMER_START_CODON_POSITION"])
+            params["PRIMER_MIN_QUALITY"] = st.number_input(
+                **st_args["PRIMER_MIN_QUALITY"], **st_values["PRIMER_MIN_QUALITY"])
+            params["PRIMER_MIN_END_QUALITY"] = st.number_input(
+                **st_args["PRIMER_MIN_END_QUALITY"], **st_values["PRIMER_MIN_END_QUALITY"])
+            params["PRIMER_QUALITY_RANGE_MIN"] = st.number_input(
+                **st_args["PRIMER_QUALITY_RANGE_MIN"], **st_values["PRIMER_QUALITY_RANGE_MIN"])
+            params["PRIMER_QUALITY_RANGE_MAX"] = st.number_input(
+                **st_args["PRIMER_QUALITY_RANGE_MAX"], **st_values["PRIMER_QUALITY_RANGE_MAX"])
+        with col_2:
+            st.write('[Sequence Quality:](/Help#PRIMER_SEQUENCE_QUALITY)')
+            params["PRIMER_SEQUENCE_QUALITY"] = st.text_area(
+                label="_", label_visibility="hidden", height=150, value=st_values["PRIMER_SEQUENCE_QUALITY"]["value"])
 
 global_args["PRIMER_TASK"] = primer_task[st.session_state.task]
 if st.session_state.task in ["Primer_Check"]:
