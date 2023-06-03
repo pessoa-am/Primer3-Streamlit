@@ -218,12 +218,33 @@ def highlight(text, color):
     html = f'<span style="color:black; background-color: {color}">{text}</span>'
     return html
 
+def reset_values():
+    return {key: dict(st_default_values[key]) for key in st_default_values}
 
-def reset_values(st_values={}):
-    st_values = dict((x, {}) for x in list(st_default_values.keys()))
-    for key in st_values:
-        st_values[key] = dict(st_default_values[key])
-    return st_values
+def get_task_region_flags(task):
+    return {
+        "show_excluded": task in ["Detection", "Primer_List"],
+        "show_target": task in ["Detection", "Sequencing"],
+        "show_included": task in ["Detection", "Cloning", "Primer_List"],
+    }
+
+def build_region_input_ui(col_obj, field_key, st_args_dict, st_values_dict, bracket_open, bracket_close):
+    with col_obj:
+        if field_key in st_args_dict:
+            col_1, col_2, col_3 = st.columns([1, 18, 1])
+            with col_1:
+                st.caption('')
+                st.caption('')
+                st.write(bracket_open)
+            with col_2:
+                return st.text_input(
+                    **st_args_dict[field_key], 
+                    **st_values_dict.get(field_key, {"value": ""}))
+            with col_3:
+                st.caption('')
+                st.caption('')
+                st.write(bracket_close)
+    return ""
 
 
 st.set_page_config(page_title="Primer3-Streamlit", page_icon=":dna:",
@@ -251,6 +272,7 @@ state_defaults = {
     "back_active": False,
     "back_params": {},
     "misprime_lib_index": 0,
+    "mishyb_lib_index": 0,
     "table_th_index": table_th_default,
     "table_salt_index": table_salt_default,
 }
@@ -276,6 +298,8 @@ for key, value in st_static_values.items():
 p3_args = []
 misprime_lib = None
 misprime_lib_name = None
+mishyb_lib = None
+mishyb_lib_name = None
 primer_desc = {'POSITION': 'Start',
                'LENGTH': 'Length',
                'TM': 'Tm',
@@ -316,6 +340,7 @@ def reset_session_keys():
     st.session_state["SCRIPT_PRIMER_TM_FORMULA"] = st_args["SCRIPT_PRIMER_TM_FORMULA"]["options"][table_th_default]
     st.session_state["SCRIPT_PRIMER_SALT_CORRECTIONS"] = st_args["SCRIPT_PRIMER_SALT_CORRECTIONS"]["options"][table_salt_default]
     st.session_state["PRIMER_MISPRIMING_LIBRARY"] = st_args["PRIMER_MISPRIMING_LIBRARY"]["options"][0]
+    st.session_state["PRIMER_INTERNAL_MISHYB_LIBRARY"] = st_args["PRIMER_INTERNAL_MISHYB_LIBRARY"]["options"][0]
     
     sync_task_state()
 
@@ -323,7 +348,7 @@ def reset_session_keys():
 with primer3_main.container():
     if st.session_state.reset_form:
         params = {}
-        st_values = reset_values(st_values)
+        st_values = reset_values()
         reset_session_keys()
         st.session_state.reset_form = False
     
@@ -390,62 +415,31 @@ with primer3_main.container():
                 col_1, col_2, col_3, col_4, col_5, col_6, col_7 = st.columns([6, 2, 2, 2, 3, 1, 5])
                 with col_1:
                     st.markdown("Mark selected region:", help="Not implemented yet")
+                flags = get_task_region_flags(st.session_state.task)
                 with col_2:
-                    if st.session_state.task in ["Detection", "Primer_List"]:
+                    if flags["show_excluded"]:
                         st.button("&lt;&nbsp;&gt;", disabled=True)
                 with col_3:
-                    if st.session_state.task in ["Detection", "Sequencing"]:
+                    if flags["show_target"]:
                         st.button("[&nbsp;]", disabled=True)
                 with col_4:
-                    if st.session_state.task in ["Detection", "Cloning", "Primer_List"]:
+                    if flags["show_included"]:
                         st.button("{&nbsp;}", disabled=True)
                 with col_5:
                     st.button("Clear", disabled=True)
                 with col_7:
                     st.button("Save Sequence", help="Not implemented yet", disabled=True)
                 col_a, col_b, col_c = st.columns(3)
-                with col_a:
-                    if st.session_state.task in ["Detection", "Primer_List"]:
-                        col_1, col_2, col_3 = st.columns([1, 18, 1])
-                        with col_1:
-                            st.caption('')
-                            st.caption('')
-                            st.write("&lt;&nbsp;")
-                        with col_2:
-                            params["SCRIPT_EXCLUDED_REGION"] = st.text_input(
-                                **st_args["SCRIPT_EXCLUDED_REGION"], **st_values["SCRIPT_EXCLUDED_REGION"])
-                        with col_3:
-                            st.caption('')
-                            st.caption('')
-                            st.write("&gt;&nbsp;")
-                with col_b:
-                    if st.session_state.task in ["Detection", "Sequencing"]:
-                        col_1, col_2, col_3 = st.columns([1, 18, 1])
-                        with col_1:
-                            st.caption('')
-                            st.caption('')
-                            st.write("[&nbsp;")
-                        with col_2:
-                            params["SCRIPT_TARGET"] = st.text_input(
-                                **st_args["SCRIPT_TARGET"], **st_values["SCRIPT_TARGET"])
-                        with col_3:
-                            st.caption('')
-                            st.caption('')
-                            st.write("]&nbsp;")
-                with col_c:
-                    if st.session_state.task in ["Detection", "Cloning", "Primer_List"]:
-                        col_1, col_2, col_3 = st.columns([1, 18, 1])
-                        with col_1:
-                            st.caption('')
-                            st.caption('')
-                            st.write("{&nbsp;")
-                        with col_2:
-                            params["SCRIPT_INCLUDED_REGION"] = st.text_input(
-                                **st_args["SCRIPT_INCLUDED_REGION"], **st_values["SCRIPT_INCLUDED_REGION"])
-                        with col_3:
-                            st.caption('')
-                            st.caption('')
-                            st.write("}&nbsp;")
+                flags = get_task_region_flags(st.session_state.task)
+                if flags["show_excluded"]:
+                    params["SCRIPT_EXCLUDED_REGION"] = build_region_input_ui(
+                        col_a, "SCRIPT_EXCLUDED_REGION", st_args, st_values, "&lt;&nbsp;", "&gt;&nbsp;")
+                if flags["show_target"]:
+                    params["SCRIPT_TARGET"] = build_region_input_ui(
+                        col_b, "SCRIPT_TARGET", st_args, st_values, "[&nbsp;", "]&nbsp;")
+                if flags["show_included"]:
+                    params["SCRIPT_INCLUDED_REGION"] = build_region_input_ui(
+                        col_c, "SCRIPT_INCLUDED_REGION", st_args, st_values, "{&nbsp;", "}&nbsp;")
                 if st.session_state.task in ["Detection"]:
                     col_1, col_2, col_3 = st.columns(3)
                     with col_1:
@@ -663,7 +657,7 @@ with primer3_main.container():
             params["SCRIPT_SEQUENCE_BLOCK_PAIRS"] = st.checkbox("Only on pair design", value=True)
             params["SCRIPT_SEQUENCE_BLOCK_FIRST"] = st.checkbox("Only on first entry", value=True)
         with col_2:
-            params["SCRIPT_SHOW_INPUT"] = st.checkbox("Show original input in JSON format", value=False)
+            params["SCRIPT_SHOW_INPUT"] = st.checkbox("Show original input", value=False)
         with col_3:
             results_format = st.radio('Show output in JSON format:', options=('No', 'Flat', 'Hierarchized'), help='"Flat" is the standard Primer3 output. "Hierarchized" means outputing Primer3 results in an hierachical dictionary, which is easier to read and use in downstream applications.')
             if results_format == 'Flat':
@@ -676,21 +670,21 @@ with primer3_main.container():
                 params['SCRIPT_SHOW_OUTPUT_FLAT'] = False
                 params['SCRIPT_SHOW_OUTPUT_HIERARCHIZED'] = False
     with tab_io:
-        params["PRIMER_INTERNAL_OLIGO_EXCLUDED_REGION"] = st.text_input(
-            **st_args["PRIMER_INTERNAL_OLIGO_EXCLUDED_REGION"], **st_values["PRIMER_INTERNAL_OLIGO_EXCLUDED_REGION"])
+        params["PRIMER_INTERNAL_EXCLUDED_REGION"] = st.text_input(
+            **st_args["PRIMER_INTERNAL_EXCLUDED_REGION"], **st_values["PRIMER_INTERNAL_EXCLUDED_REGION"])
         col_1, col_2, col_3, col_4, col_5 = st.columns([4, 7, 7, 7, 15])
         with col_1:
             st.caption('')
             st.write('[Hyb Oligo Size](/Help#PRIMER_SIZE)')
         with col_2:
-            params["PRIMER_INTERNAL_OLIGO_MIN_SIZE"] = st.number_input(
-                **st_args["PRIMER_INTERNAL_OLIGO_MIN_SIZE"], **st_values["PRIMER_INTERNAL_OLIGO_MIN_SIZE"])
+            params["PRIMER_INTERNAL_MIN_SIZE"] = st.number_input(
+                **st_args["PRIMER_INTERNAL_MIN_SIZE"], **st_values["PRIMER_INTERNAL_MIN_SIZE"])
         with col_3:
-            params["PRIMER_INTERNAL_OLIGO_OPT_SIZE"] = st.number_input(
-                **st_args["PRIMER_INTERNAL_OLIGO_OPT_SIZE"], **st_values["PRIMER_INTERNAL_OLIGO_OPT_SIZE"])
+            params["PRIMER_INTERNAL_OPT_SIZE"] = st.number_input(
+                **st_args["PRIMER_INTERNAL_OPT_SIZE"], **st_values["PRIMER_INTERNAL_OPT_SIZE"])
         with col_4:
-            params["PRIMER_INTERNAL_OLIGO_MAX_SIZE"] = st.number_input(
-                **st_args["PRIMER_INTERNAL_OLIGO_MAX_SIZE"], **st_values["PRIMER_INTERNAL_OLIGO_MAX_SIZE"])
+            params["PRIMER_INTERNAL_MAX_SIZE"] = st.number_input(
+                **st_args["PRIMER_INTERNAL_MAX_SIZE"], **st_values["PRIMER_INTERNAL_MAX_SIZE"])
         with col_5:
             st.caption('')
         col_1, col_2, col_3, col_4, col_5 = st.columns([4, 7, 7, 7, 15])
@@ -698,14 +692,14 @@ with primer3_main.container():
             st.caption('')
             st.write('[Hyb Oligo Tm](/Help#PRIMER_TM)')
         with col_2:
-            params["PRIMER_INTERNAL_OLIGO_MIN_TM"] = st.number_input(
-                **st_args["PRIMER_INTERNAL_OLIGO_MIN_TM"], **st_values["PRIMER_INTERNAL_OLIGO_MIN_TM"])
+            params["PRIMER_INTERNAL_MIN_TM"] = st.number_input(
+                **st_args["PRIMER_INTERNAL_MIN_TM"], **st_values["PRIMER_INTERNAL_MIN_TM"])
         with col_3:
-            params["PRIMER_INTERNAL_OLIGO_OPT_TM"] = st.number_input(
-                **st_args["PRIMER_INTERNAL_OLIGO_OPT_TM"], **st_values["PRIMER_INTERNAL_OLIGO_OPT_TM"])
+            params["PRIMER_INTERNAL_OPT_TM"] = st.number_input(
+                **st_args["PRIMER_INTERNAL_OPT_TM"], **st_values["PRIMER_INTERNAL_OPT_TM"])
         with col_4:
-            params["PRIMER_INTERNAL_OLIGO_MAX_TM"] = st.number_input(
-                **st_args["PRIMER_INTERNAL_OLIGO_MAX_TM"], **st_values["PRIMER_INTERNAL_OLIGO_MAX_TM"])
+            params["PRIMER_INTERNAL_MAX_TM"] = st.number_input(
+                **st_args["PRIMER_INTERNAL_MAX_TM"], **st_values["PRIMER_INTERNAL_MAX_TM"])
         with col_5:
             st.caption('')
         col_1, col_2, col_3, col_4, col_5 = st.columns([4, 7, 7, 7, 15])
@@ -713,14 +707,14 @@ with primer3_main.container():
             st.caption('')
             st.write('[Hyb Oligo %GC](/Help#PRIMER_GC_PERCENT)')
         with col_2:
-            params["PRIMER_INTERNAL_OLIGO_MIN_GC"] = st.number_input(
-                **st_args["PRIMER_INTERNAL_OLIGO_MIN_GC"], **st_values["PRIMER_INTERNAL_OLIGO_MIN_GC"])
+            params["PRIMER_INTERNAL_MIN_GC"] = st.number_input(
+                **st_args["PRIMER_INTERNAL_MIN_GC"], **st_values["PRIMER_INTERNAL_MIN_GC"])
         with col_3:
-            params["PRIMER_INTERNAL_OLIGO_OPT_GC_PERCENT"] = st.number_input(
-                **st_args["PRIMER_INTERNAL_OLIGO_OPT_GC_PERCENT"], **st_values["PRIMER_INTERNAL_OLIGO_OPT_GC_PERCENT"])
+            params["PRIMER_INTERNAL_OPT_GC_PERCENT"] = st.number_input(
+                **st_args["PRIMER_INTERNAL_OPT_GC_PERCENT"], **st_values["PRIMER_INTERNAL_OPT_GC_PERCENT"])
         with col_4:
-            params["PRIMER_INTERNAL_OLIGO_MAX_GC"] = st.number_input(
-                **st_args["PRIMER_INTERNAL_OLIGO_MAX_GC"], **st_values["PRIMER_INTERNAL_OLIGO_MAX_GC"])
+            params["PRIMER_INTERNAL_MAX_GC"] = st.number_input(
+                **st_args["PRIMER_INTERNAL_MAX_GC"], **st_values["PRIMER_INTERNAL_MAX_GC"])
         with col_5:
             st.caption('')
         col_1, col_2 = st.columns(2)
@@ -729,30 +723,30 @@ with primer3_main.container():
                 **st_args["PRIMER_INTERNAL_SALT_MONOVALENT"], **st_values["PRIMER_INTERNAL_SALT_MONOVALENT"])
             params["PRIMER_INTERNAL_SALT_DIVALENT"] = st.number_input(
                 **st_args["PRIMER_INTERNAL_SALT_DIVALENT"], **st_values["PRIMER_INTERNAL_SALT_DIVALENT"])
-            params["PRIMER_INTERNAL_OLIGO_NUM_NS"] = st.number_input(
+            params["PRIMER_INTERNAL_NUM_NS"] = st.number_input(
                 **st_args["PRIMER_INTERNAL_MAX_NS_ACCEPTED"], **st_values["PRIMER_INTERNAL_MAX_NS_ACCEPTED"])
-            params["PRIMER_INTERNAL_OLIGO_SELF_ANY"] = st.number_input(
+            params["PRIMER_INTERNAL_SELF_ANY"] = st.number_input(
                 **st_args["PRIMER_INTERNAL_MAX_SELF_ANY"], **st_values["PRIMER_INTERNAL_MAX_SELF_ANY"])
         with col_2:
-            params["PRIMER_INTERNAL_OLIGO_DNA_CONC"] = st.number_input(
-                **st_args["PRIMER_INTERNAL_OLIGO_DNA_CONC"], **st_values["PRIMER_INTERNAL_OLIGO_DNA_CONC"])
-            params["PRIMER_INTERNAL_OLIGO_DNTP_CONC"] = st.number_input(
-                **st_args["PRIMER_INTERNAL_OLIGO_DNTP_CONC"], **st_values["PRIMER_INTERNAL_OLIGO_DNTP_CONC"])
-            params["PRIMER_INTERNAL_OLIGO_MAX_POLY_X"] = st.number_input(
-                **st_args["PRIMER_INTERNAL_OLIGO_MAX_POLY_X"], **st_values["PRIMER_INTERNAL_OLIGO_MAX_POLY_X"])
-            params["PRIMER_INTERNAL_OLIGO_SELF_END"] = st.number_input(
-                **st_args["PRIMER_INTERNAL_OLIGO_SELF_END"], **st_values["PRIMER_INTERNAL_OLIGO_SELF_END"])
+            params["PRIMER_INTERNAL_DNA_CONC"] = st.number_input(
+                **st_args["PRIMER_INTERNAL_DNA_CONC"], **st_values["PRIMER_INTERNAL_DNA_CONC"])
+            params["PRIMER_INTERNAL_DNTP_CONC"] = st.number_input(
+                **st_args["PRIMER_INTERNAL_DNTP_CONC"], **st_values["PRIMER_INTERNAL_DNTP_CONC"])
+            params["PRIMER_INTERNAL_MAX_POLY_X"] = st.number_input(
+                **st_args["PRIMER_INTERNAL_MAX_POLY_X"], **st_values["PRIMER_INTERNAL_MAX_POLY_X"])
+            params["PRIMER_INTERNAL_SELF_END"] = st.number_input(
+                **st_args["PRIMER_INTERNAL_SELF_END"], **st_values["PRIMER_INTERNAL_SELF_END"])
         col_1, col_2 = st.columns(2)
         with col_1:
-            params["PRIMER_INTERNAL_OLIGO_MAX_MISHYB"] = st.number_input(
-                **st_args["PRIMER_INTERNAL_OLIGO_MAX_MISHYB"], **st_values["PRIMER_INTERNAL_OLIGO_MAX_MISHYB"])
+            params["PRIMER_INTERNAL_MAX_LIBRARY_MISHYB"] = st.number_input(
+                **st_args["PRIMER_INTERNAL_MAX_LIBRARY_MISHYB"], **st_values["PRIMER_INTERNAL_MAX_LIBRARY_MISHYB"])
         with col_2:
-            params["PRIMER_INTERNAL_OLIGO_MIN_QUALITY"] = st.number_input(
-                **st_args["PRIMER_INTERNAL_OLIGO_MIN_QUALITY"], **st_values["PRIMER_INTERNAL_OLIGO_MIN_QUALITY"])
+            params["PRIMER_INTERNAL_MIN_QUALITY"] = st.number_input(
+                **st_args["PRIMER_INTERNAL_MIN_QUALITY"], **st_values["PRIMER_INTERNAL_MIN_QUALITY"])
         col_1, col_2 = st.columns(2)
         with col_1:
-            params["PRIMER_INTERNAL_OLIGO_MISHYB_LIBRARY"] = st.selectbox(
-                **st_args["PRIMER_INTERNAL_OLIGO_MISHYB_LIBRARY"], **st_values["PRIMER_INTERNAL_OLIGO_MISHYB_LIBRARY"])
+            params["PRIMER_INTERNAL_MISHYB_LIBRARY"] = st.selectbox(
+                **st_args["PRIMER_INTERNAL_MISHYB_LIBRARY"], index=st.session_state.mishyb_lib_index)
     with tab_pw:
         col_p, col_pp, col_io = st.columns(3)
         with col_p:
@@ -817,26 +811,26 @@ with primer3_main.container():
         
         with col_io:
             st.subheader("For Hyb Oligos")
-            params["PRIMER_IO_WT_TM_LT"] = st.number_input(
-                **st_args["PRIMER_IO_WT_TM_LT"], **st_values["PRIMER_IO_WT_TM_LT"])
-            params["PRIMER_IO_WT_TM_GT"] = st.number_input(
-                **st_args["PRIMER_IO_WT_TM_GT"], **st_values["PRIMER_IO_WT_TM_GT"])
-            params["PRIMER_IO_WT_SIZE_LT"] = st.number_input(
-                **st_args["PRIMER_IO_WT_SIZE_LT"], **st_values["PRIMER_IO_WT_SIZE_LT"])
-            params["PRIMER_IO_WT_SIZE_GT"] = st.number_input(
-                **st_args["PRIMER_IO_WT_SIZE_GT"], **st_values["PRIMER_IO_WT_SIZE_GT"])
-            params["PRIMER_IO_WT_GC_PERCENT_LT"] = st.number_input(
-                **st_args["PRIMER_IO_WT_GC_PERCENT_LT"], **st_values["PRIMER_IO_WT_GC_PERCENT_LT"])
-            params["PRIMER_IO_WT_GC_PERCENT_GT"] = st.number_input(
-                **st_args["PRIMER_IO_WT_GC_PERCENT_GT"], **st_values["PRIMER_IO_WT_GC_PERCENT_GT"])
-            params["PRIMER_IO_WT_REP_SIM"] = st.number_input(
-                **st_args["PRIMER_IO_WT_REP_SIM"], **st_values["PRIMER_IO_WT_REP_SIM"])
-            params["PRIMER_IO_WT_COMPL_ANY"] = st.number_input(
-                **st_args["PRIMER_IO_WT_COMPL_ANY"], **st_values["PRIMER_IO_WT_COMPL_ANY"])
-            params["PRIMER_IO_WT_SEQ_QUAL"] = st.number_input(
-                **st_args["PRIMER_IO_WT_SEQ_QUAL"], **st_values["PRIMER_IO_WT_SEQ_QUAL"])
-            params["PRIMER_IO_WT_NUM_NS"] = st.number_input(
-                **st_args["PRIMER_IO_WT_NUM_NS"], **st_values["PRIMER_IO_WT_NUM_NS"])
+            params["PRIMER_INTERNAL_WT_TM_LT"] = st.number_input(
+                **st_args["PRIMER_INTERNAL_WT_TM_LT"], **st_values["PRIMER_INTERNAL_WT_TM_LT"])
+            params["PRIMER_INTERNAL_WT_TM_GT"] = st.number_input(
+                **st_args["PRIMER_INTERNAL_WT_TM_GT"], **st_values["PRIMER_INTERNAL_WT_TM_GT"])
+            params["PRIMER_INTERNAL_WT_SIZE_LT"] = st.number_input(
+                **st_args["PRIMER_INTERNAL_WT_SIZE_LT"], **st_values["PRIMER_INTERNAL_WT_SIZE_LT"])
+            params["PRIMER_INTERNAL_WT_SIZE_GT"] = st.number_input(
+                **st_args["PRIMER_INTERNAL_WT_SIZE_GT"], **st_values["PRIMER_INTERNAL_WT_SIZE_GT"])
+            params["PRIMER_INTERNAL_WT_GC_PERCENT_LT"] = st.number_input(
+                **st_args["PRIMER_INTERNAL_WT_GC_PERCENT_LT"], **st_values["PRIMER_INTERNAL_WT_GC_PERCENT_LT"])
+            params["PRIMER_INTERNAL_WT_GC_PERCENT_GT"] = st.number_input(
+                **st_args["PRIMER_INTERNAL_WT_GC_PERCENT_GT"], **st_values["PRIMER_INTERNAL_WT_GC_PERCENT_GT"])
+            params["PRIMER_INTERNAL_WT_REP_SIM"] = st.number_input(
+                **st_args["PRIMER_INTERNAL_WT_REP_SIM"], **st_values["PRIMER_INTERNAL_WT_REP_SIM"])
+            params["PRIMER_INTERNAL_WT_COMPL_ANY"] = st.number_input(
+                **st_args["PRIMER_INTERNAL_WT_COMPL_ANY"], **st_values["PRIMER_INTERNAL_WT_COMPL_ANY"])
+            params["PRIMER_INTERNAL_WT_SEQ_QUAL"] = st.number_input(
+                **st_args["PRIMER_INTERNAL_WT_SEQ_QUAL"], **st_values["PRIMER_INTERNAL_WT_SEQ_QUAL"])
+            params["PRIMER_INTERNAL_WT_NUM_NS"] = st.number_input(
+                **st_args["PRIMER_INTERNAL_WT_NUM_NS"], **st_values["PRIMER_INTERNAL_WT_NUM_NS"])
     with tab_sq:
         col_1, col_2 = st.columns([1, 2.5])
         with col_1:
@@ -882,45 +876,28 @@ if st.session_state.pick_primers and params["SEQUENCE_TEMPLATE"] != "":
         if key.startswith("SEQUENCE_"):
             seq_args[key] = params[key]
             p3_args.append(f'{key}={params[key]}')
-        if key.startswith("PRIMER_") and "_MISPRIMING_LIBRARY" not in key:
+        if key.startswith("PRIMER_") and "_MISPRIMING_LIBRARY" not in key and "_MISHYB_LIBRARY" not in key:
             global_args[key] = params[key]
-        if params["SCRIPT_PRIMER_LIBERAL_BASE"]:
-            global_args["PRIMER_LIBERAL_BASE"] = 1
-        else:
-            global_args["PRIMER_LIBERAL_BASE"] = 0
-        if params["SCRIPT_PRIMER_LIB_AMBIGUITY_CODES_CONSENSUS"]:
-            global_args["PRIMER_LIB_AMBIGUITY_CODES_CONSENSUS"] = 1
-        else:
-            global_args["PRIMER_LIB_AMBIGUITY_CODES_CONSENSUS"] = 0
-        if params["SCRIPT_PRIMER_LOWERCASE_MASKING"]:
-            global_args["PRIMER_LOWERCASE_MASKING"] = 1
-        else:
-            global_args["PRIMER_LOWERCASE_MASKING"] = 0
+        global_args["PRIMER_LIBERAL_BASE"] = int(params["SCRIPT_PRIMER_LIBERAL_BASE"])
+        global_args["PRIMER_LIB_AMBIGUITY_CODES_CONSENSUS"] = int(params["SCRIPT_PRIMER_LIB_AMBIGUITY_CODES_CONSENSUS"])
+        global_args["PRIMER_LOWERCASE_MASKING"] = int(params["SCRIPT_PRIMER_LOWERCASE_MASKING"])
     if st.session_state.task not in ["Primer_Check"]:
         regions = []
-        if st.session_state.task in ["Detection", "Primer_List"]:
+        flags = get_task_region_flags(st.session_state.task)
+        if flags["show_excluded"]:
             regions.append("EXCLUDED_REGION")
-        if st.session_state.task in ["Detection", "Sequencing"]:
+        if flags["show_target"]:
             regions.append("TARGET")
-        if st.session_state.task in ["Detection", "Cloning", "Primer_List"]:
+        if flags["show_included"]:
             regions.append("INCLUDED_REGION")
         for r in regions:
             if params["SCRIPT_" + r] != "":
                 p3_args.append("SEQUENCE_" + r + "=" + params["SCRIPT_" + r])
                 seq_args["SEQUENCE_" + r] = ranges_to_list(params["SCRIPT_" + r])
         if st.session_state.task in ["Detection"]:
-            if params["SCRIPT_DETECTION_PICK_LEFT"]:
-                global_args["PRIMER_PICK_LEFT_PRIMER"] = 1
-            else:
-                global_args["PRIMER_PICK_LEFT_PRIMER"] = 0
-            if params["SCRIPT_DETECTION_PICK_HYB_PROBE"]:
-                global_args["PRIMER_PICK_INTERNAL_OLIGO"] = 1
-            else:
-                global_args["PRIMER_PICK_INTERNAL_OLIGO"] = 0
-            if params["SCRIPT_DETECTION_PICK_RIGHT"]:
-                global_args["PRIMER_PICK_RIGHT_PRIMER"] = 1
-            else:
-                global_args["PRIMER_PICK_RIGHT_PRIMER"] = 0
+            global_args["PRIMER_PICK_LEFT_PRIMER"] = int(params["SCRIPT_DETECTION_PICK_LEFT"])
+            global_args["PRIMER_PICK_INTERNAL_OLIGO"] = int(params["SCRIPT_DETECTION_PICK_HYB_PROBE"])
+            global_args["PRIMER_PICK_RIGHT_PRIMER"] = int(params["SCRIPT_DETECTION_PICK_RIGHT"])
         global_args["PRIMER_TM_FORMULA"] = table_th[params["SCRIPT_PRIMER_TM_FORMULA"]]
         st.session_state.table_th_index = table_th[params["SCRIPT_PRIMER_TM_FORMULA"]]
         global_args["PRIMER_SALT_CORRECTIONS"] = table_salt[params["SCRIPT_PRIMER_SALT_CORRECTIONS"]]
@@ -930,6 +907,11 @@ if st.session_state.pick_primers and params["SEQUENCE_TEMPLATE"] != "":
             misprime_lib = getattr(misprime_libs, params["PRIMER_MISPRIMING_LIBRARY"])
             st.session_state.misprime_lib_index = st_args["PRIMER_MISPRIMING_LIBRARY"]["options"].index(
                 params["PRIMER_MISPRIMING_LIBRARY"])
+        if params["PRIMER_INTERNAL_MISHYB_LIBRARY"] != 'NONE':
+            p3_args.append("PRIMER_INTERNAL_MISHYB_LIBRARY" + "=" + params["PRIMER_INTERNAL_MISHYB_LIBRARY"])
+            mishyb_lib = getattr(misprime_libs, params["PRIMER_INTERNAL_MISHYB_LIBRARY"])
+            st.session_state.mishyb_lib_index = st_args["PRIMER_INTERNAL_MISHYB_LIBRARY"]["options"].index(
+                params["PRIMER_INTERNAL_MISHYB_LIBRARY"])
     for key, value in global_args.items():
         p3_args.append(f'{key}={value}')
     p3_args = sorted(p3_args)
@@ -937,9 +919,10 @@ if st.session_state.pick_primers and params["SEQUENCE_TEMPLATE"] != "":
     if 'PRIMER_PRODUCT_SIZE_RANGE' in global_args:
         global_args['PRIMER_PRODUCT_SIZE_RANGE'] = ranges_to_list(global_args['PRIMER_PRODUCT_SIZE_RANGE'])
     output_global_args = dict(global_args)
+    primers = {'PRIMERS': [], 'EXPLAIN': {}}
     try:
         primer3_results = design_primers(
-            seq_args, global_args, misprime_lib=misprime_lib)
+            seq_args, global_args, misprime_lib=misprime_lib, mishyb_lib=mishyb_lib)
         primers = hierarchize(primer3_results)
     except Exception as e:
         st.exception(e)
